@@ -279,7 +279,7 @@ public class Auto extends LinearOpMode {
 
     private boolean testTurn(double degrees){
         double i = degrees * (((DIAGONAL_ROBOT * Math.PI) / CIRCUMFERENCE) * 280);
-        if(Math.abs(getLeft()) <= i && Math.abs(getRight()) <= i) {
+        if(Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
             setPower(0);
             return true;
         } else {
@@ -295,7 +295,7 @@ public class Auto extends LinearOpMode {
 
     private boolean testDrive(double distance){
         double i = (distance / CIRCUMFERENCE) * 280 / 360;
-        if (Math.abs(getLeft()) <= i && Math.abs(getRight()) <= i) {
+        if (Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
             setPower(0);
             return true;
         }
