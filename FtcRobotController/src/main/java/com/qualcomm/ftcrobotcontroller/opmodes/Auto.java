@@ -98,9 +98,9 @@ public class Auto extends LinearOpMode {
                     state++;
                     break;
 
+                case 7:
                 case 3:
                     if(testTurn(45)){
-                        drive(0.05f);
                         state++;
                     }
                     break;
@@ -121,10 +121,11 @@ public class Auto extends LinearOpMode {
                     state++;
                     break;
 
-                case 7:
-                    if(testTurn(45)){
-                        state++;
-                    }
+                case 8:
+                    servo.setPosition(1);
+                    sleep(1000);
+                    servo.setPosition(0);
+                    state++;
                     break;
                 /*
                 case 2:
@@ -278,7 +279,7 @@ public class Auto extends LinearOpMode {
 
     private boolean testTurn(double degrees){
         double i = degrees * (((DIAGONAL_ROBOT * Math.PI) / CIRCUMFERENCE) * 280);
-        if(Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
+        if(Math.abs(getLeft()) <= i && Math.abs(getRight()) <= i) {
             setPower(0);
             return true;
         } else {
@@ -294,7 +295,7 @@ public class Auto extends LinearOpMode {
 
     private boolean testDrive(double distance){
         double i = (distance / CIRCUMFERENCE) * 280 / 360;
-        if (Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
+        if (Math.abs(getLeft()) <= i && Math.abs(getRight()) <= i) {
             setPower(0);
             return true;
         }
