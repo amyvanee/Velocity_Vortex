@@ -19,7 +19,6 @@ public class Auto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-
         initHardware();
 
         waitOneFullHardwareCycle();
@@ -36,10 +35,8 @@ public class Auto extends LinearOpMode {
         }
     }
 
-    void initHardware()
-    {
-        try
-        {
+    void initHardware() {
+        try {
             wfr = hardwareMap.dcMotor.get("wfr");
             wbr = hardwareMap.dcMotor.get("wbr");
             wfl = hardwareMap.dcMotor.get("wfl");
@@ -47,38 +44,29 @@ public class Auto extends LinearOpMode {
 
             wbr.setDirection(DcMotor.Direction.REVERSE);
             wfr.setDirection(DcMotor.Direction.REVERSE);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             telemetry.addData("[ERROR]:", "driving wheels setup");
         }
 
-        try
-        {
+        try {
             thrower = hardwareMap.servo.get("thrower");
         }
-        catch (Exception e)
-        {
+        catch (Exception e) {
             telemetry.addData("[ERROR]:", "thrower servo setup");
         }
 
-        try
-        {
+        try {
             floor = hardwareMap.colorSensor.get("floor");
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             telemetry.addData("[ERROR]:", "floor color sensor setup");
         }
     }
 
-    private boolean isOnLine()
-    {
+    private boolean isOnLine() {
         return floor.green() > 20 && floor.blue() > 20 && floor.red() > 20;
     }
 
-    void setPower(float left, float right)
-    {
+    void setPower(float left, float right) {
         // write the values to the motors
         wfr.setPower(right);
         wbr.setPower(right);
@@ -86,8 +74,7 @@ public class Auto extends LinearOpMode {
         wbl.setPower(left);
     }
 
-    void setPower(float power)
-    {
+    void setPower(float power) {
         // write the values to the motors
         wfr.setPower(power);
         wbr.setPower(power);
