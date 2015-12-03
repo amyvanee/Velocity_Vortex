@@ -91,8 +91,8 @@ public class TeleOp extends LinearOpMode
 
             // controlling the wings
 
-            leftWing.setPosition(gamepad2.left_trigger);
-            rightWing.setPosition(  gamepad2.right_trigger);
+            leftWing.setPosition(Range.scale(gamepad2.left_trigger, 0, 1, 0.5, 1));
+            rightWing.setPosition(Range.scale(gamepad2.right_trigger, 0, 1, 1, 0.2));
 
             waitOneFullHardwareCycle();
         }
