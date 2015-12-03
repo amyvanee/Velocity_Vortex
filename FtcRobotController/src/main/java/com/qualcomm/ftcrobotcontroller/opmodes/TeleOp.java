@@ -26,7 +26,6 @@ public class TeleOp extends LinearOpMode
 
         float wheelPower, turnPower; // power values
         float armPower;
-        float lWingPos, rWingPos;
 
         waitForStart();
 
@@ -40,8 +39,17 @@ public class TeleOp extends LinearOpMode
             wheelPower = -gamepad1.left_stick_y;
             turnPower = -gamepad1.right_stick_x;
 
-            wheelPower = scaleInput(Range.clip(wheelPower, -1, 1));
-            turnPower = scaleInput(Range.clip(turnPower, -1, 1));
+            if (gamepad1.right_bumper)
+            {
+                wheelPower = scaleInput(Range.clip(wheelPower, -1, 1)) / 2;
+                turnPower = scaleInput(Range.clip(turnPower, -1, 1)) / 2;
+            }
+            else
+            {
+                wheelPower = scaleInput(Range.clip(wheelPower, -1, 1));
+                turnPower = scaleInput(Range.clip(turnPower, -1, 1));
+            }
+
 
             // allows for tighter point turns
             if (Math.abs(turnPower) > 0) {
@@ -83,11 +91,8 @@ public class TeleOp extends LinearOpMode
 
             // controlling the wings
 
-            lWingPos = gamepad2.left_trigger;
-            rWingPos = gamepad2.right_trigger;
-
-            leftWing.setPosition(lWingPos);
-            rightWing.setPosition(rWingPos);
+            leftWing.setPosition(gamepad2.left_trigger);
+            rightWing.setPosition(  gamepad2.right_trigger);
 
             waitOneFullHardwareCycle();
         }
