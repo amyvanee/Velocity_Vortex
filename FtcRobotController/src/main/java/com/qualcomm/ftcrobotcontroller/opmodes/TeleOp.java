@@ -50,7 +50,7 @@ public class TeleOp extends LinearOpMode
             else if (gamepad1.b)
             {
                 setWheelPower(wheelPower, wheelPower);
-                arm.setPower(-wheelPower);
+                arm.setPower(wheelPower);
             }
             else
             {
@@ -79,7 +79,7 @@ public class TeleOp extends LinearOpMode
             else
                 armPower = 0f;
 
-            arm.setPower(armPower);
+            arm.setPower(-armPower);
 
             // controlling the wings
 
