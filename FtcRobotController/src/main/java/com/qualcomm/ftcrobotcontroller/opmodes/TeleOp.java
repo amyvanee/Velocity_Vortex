@@ -46,12 +46,14 @@ public class TeleOp extends LinearOpMode
             if (Math.abs(turnPower) > 0) {
                 setWheelPower(-turnPower, turnPower);
             }
+            else if (gamepad1.b)
+            {
+                setWheelPower(wheelPower, wheelPower);
+                arm.setPower(-wheelPower);
+            }
             else
             {
                 setWheelPower(wheelPower, wheelPower);
-                //@TODO: get this to work
-                if (gamepad1.b)
-                    arm.setPower(-wheelPower);
             }
 
             if(gamepad1.a)
@@ -120,8 +122,8 @@ public class TeleOp extends LinearOpMode
         wbl = hardwareMap.dcMotor.get("wbl");
 
         thrower = hardwareMap.servo.get("thrower");
-        //leftWing = hardwareMap.servo.get("left_wing");
-        //rightWing = hardwareMap.servo.get("right_wing");
+        leftWing = hardwareMap.servo.get("left_wing");
+        rightWing = hardwareMap.servo.get("right_wing");
 
         wbr.setDirection(DcMotor.Direction.REVERSE);
         wfr.setDirection(DcMotor.Direction.REVERSE);
