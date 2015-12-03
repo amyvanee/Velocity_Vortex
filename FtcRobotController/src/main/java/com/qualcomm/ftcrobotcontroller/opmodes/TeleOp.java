@@ -10,7 +10,7 @@ public class TeleOp extends LinearOpMode
 {
     DcMotor wfl, wbl, wfr, wbr, arm;
     DcMotorController arm_controller;
-    Servo thrower;
+    Servo thrower, leftWing, rightWing;
 
     @Override
     public void runOpMode() throws InterruptedException
@@ -26,6 +26,7 @@ public class TeleOp extends LinearOpMode
 
         float wheelPower, turnPower; // power values
         float armPower;
+        float lWingPos, rWingPos;
 
         waitForStart();
 
@@ -82,29 +83,11 @@ public class TeleOp extends LinearOpMode
 
             // controlling the wings
 
-            /*
-            if (gamepad2.left_bumper)
-            {
-                leftWing.setPosition(1);
-                telemetry.addData("Left Wing", "Extended");
-            }
-            else
-            {
-                leftWing.setPosition(0);
-                telemetry.addData("Left Wing", "Retracted");
-            }
+            lWingPos = gamepad2.left_trigger;
+            rWingPos = gamepad2.right_trigger;
 
-            if (gamepad2.right_bumper)
-            {
-                rightWing.setPosition(1);
-                telemetry.addData("Right Wing", "Extended");
-            }
-            else
-            {
-                rightWing.setPosition(0);
-                telemetry.addData("Right Wing", "Retracted");
-            }
-            */
+            leftWing.setPosition(lWingPos);
+            rightWing.setPosition(rWingPos);
 
             waitOneFullHardwareCycle();
         }
