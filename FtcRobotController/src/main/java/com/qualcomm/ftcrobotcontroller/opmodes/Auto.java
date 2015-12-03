@@ -19,14 +19,8 @@ public class Auto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        try {
-            initHardware();
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]:", "hardware initialization error");
-        }
 
-        // waitOneFullHardwareCycle();
-        // resetEncoders();
+        initHardware();
 
         waitOneFullHardwareCycle();
         telemetry.addData("State", "Ready to Start");//dont press start until you see this
@@ -41,79 +35,70 @@ public class Auto extends LinearOpMode {
             waitOneFullHardwareCycle();
         }
     }
-//            switch (state) {
-//                case 0:
-//                    setPower(0.05f); // good speed for reading value
-//                    state++;
-//                    break;
-//
-//                case 1:
-//                    if (isOnLine()) {
-//                        setPower(0.0f);
-//                        state++;
-//                    }
-//                    break;
-//
-//                case 2:
-//                    servo.setPosition(1);
-//                    sleep(1000);
-//                    servo.setPosition(0);
-//                    state++;
-//                    break;
-//
-//                default:
-//                    break;
-//            }
-//
-//            telemetry.addData("State", state);
-//
-//            telemetry.addData("R", floor.red());
-//            telemetry.addData("G", floor.green());
-//            telemetry.addData("B", floor.blue());
-//
-//            waitOneFullHardwareCycle();
-
 
     void initHardware()
     {
-        wfr = hardwareMap.dcMotor.get("wfr");
-        wbr = hardwareMap.dcMotor.get("wbr");
-        wfl = hardwareMap.dcMotor.get("wfl");
-        wbl = hardwareMap.dcMotor.get("wbl");
+        try
+        {
+            wfr = hardwareMap.dcMotor.get("wfr");
+            wbr = hardwareMap.dcMotor.get("wbr");
+            wfl = hardwareMap.dcMotor.get("wfl");
+            wbl = hardwareMap.dcMotor.get("wbl");
 
-        thrower = hardwareMap.servo.get("thrower");
+            wbr.setDirection(DcMotor.Direction.REVERSE);
+            wfr.setDirection(DcMotor.Direction.REVERSE);
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "driving wheels setup");
+        }
 
-        wbr.setDirection(DcMotor.Direction.REVERSE);
-        wfr.setDirection(DcMotor.Direction.REVERSE);
+        try
+        {
+            thrower = hardwareMap.servo.get("thrower");
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "thrower servo setup");
+        }
+
+        try
+        {
+            floor = hardwareMap.colorSensor.get("floor");
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "floor color sensor setup");
+        }
     }
 
-    private boolean isOnLine() {
+    private boolean isOnLine()
+    {
         return floor.green() > 20 && floor.blue() > 20 && floor.red() > 20;
     }
 
-    private void setPower(float i, float i2) {
-        if (wbr != null)
-            wbr.setPower(-i2);
-        if (wfr != null)
-            wfr.setPower(-i2);
-        if (wbl != null)
-            wbl.setPower(-i);
-        if (wfl != null)
-            wfl.setPower(-i);
+    void setPower(float left, float right)
+    {
+        // write the values to the motors
+        wfr.setPower(right);
+        wbr.setPower(right);
+        wfl.setPower(left);
+        wbl.setPower(left);
     }
 
-    private void setPower(float i) {
-        if (wbr != null)
-            wbr.setPower(-i);
-        if (wfr != null)
-            wfr.setPower(-i);
-        if (wbl != null)
-            wbl.setPower(-i);
-        if (wfl != null)
-            wfl.setPower(-i);
+    void setPower(float power)
+    {
+        // write the values to the motors
+        wfr.setPower(power);
+        wbr.setPower(power);
+        wfl.setPower(power);
+        wbl.setPower(power);
     }
 
-    private void resetEncoders() {
+    /* Got rid of this for testing
+
+    private void resetEncoders()
+    {
         oldLeft = wfl.getCurrentPosition();
         oldRight = wfr.getCurrentPosition();
         try {
@@ -181,4 +166,5 @@ public class Auto extends LinearOpMode {
     private void error(Exception e, String s) {
         telemetry.addData("Error", e.getStackTrace());
     }
+    */
 }

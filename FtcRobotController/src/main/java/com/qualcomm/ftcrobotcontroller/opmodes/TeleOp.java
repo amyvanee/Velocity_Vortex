@@ -8,23 +8,16 @@ import com.qualcomm.robotcore.util.Range;
 
 public class TeleOp extends LinearOpMode
 {
-    DcMotor wfl, wbl, wfr, wbr, arm;
-    DcMotorController arm_controller;
-    Servo thrower, leftWing, rightWing;
+    private DcMotor wfl, wbl, wfr, wbr, arm;
+    private Servo thrower, leftWing, rightWing;
 
     @Override
     public void runOpMode() throws InterruptedException
     {
-        try
-        {
-            initHardware();
-        }
-        catch (Exception e)
-        {
-            telemetry.addData("[ERROR]:", "hardware initialization error");
-        }
+        initHardware();
 
-        float wheelPower, turnPower; // power values
+        // power values
+        float wheelPower, turnPower;
         float armPower;
 
         waitForStart();
@@ -35,37 +28,28 @@ public class TeleOp extends LinearOpMode
             // gamepad1:
             // ----------------
 
-            // using seperate control scheme because it might help with climbing
             wheelPower = -gamepad1.left_stick_y;
             turnPower = -gamepad1.right_stick_x;
 
-            if (gamepad1.right_bumper)
+            if (gamepad1.right_bumper) // different speeds
             {
-                wheelPower = scaleInput(Range.clip(wheelPower, -1, 1)) / 2;
-                turnPower = scaleInput(Range.clip(turnPower, -1, 1)) / 2;
+                wheelPower = scaleInput(wheelPower) / 2;
+                turnPower = scaleInput(turnPower) / 2;
             }
             else
             {
-                wheelPower = scaleInput(Range.clip(wheelPower, -1, 1));
-                turnPower = scaleInput(Range.clip(turnPower, -1, 1));
+                wheelPower = scaleInput(wheelPower);
+                turnPower = scaleInput(turnPower);
             }
-
 
             // allows for tighter point turns
-            if (Math.abs(turnPower) > 0) {
+            if (Math.abs(turnPower) > 0)
                 setWheelPower(-turnPower, turnPower);
-            }
-            else if (gamepad1.b)
-            {
-                setWheelPower(wheelPower, wheelPower);
-                arm.setPower(wheelPower);
-            }
             else
-            {
                 setWheelPower(wheelPower, wheelPower);
-            }
 
-            if(gamepad1.a)
+            // b will allow control of thrower
+            if(gamepad1.b)
                 thrower.setPosition(1);
             else
                 thrower.setPosition(0);
@@ -74,23 +58,23 @@ public class TeleOp extends LinearOpMode
             // gamepad2;
             // --------------
 
-            // must hold down a before being able to move arm
+            // must hold down a before being able to move arm (a for activate)
             if (gamepad2.a)
             {
                 armPower = -gamepad2.left_stick_y;
-                armPower = scaleInput(Range.clip(armPower, -1, 1));
-                if (armPower > 0)
-                    telemetry.addData("Arm", "Extending");
-                else
-                    telemetry.addData("Arm", "Retracting");
+                armPower = scaleInput(armPower);
             }
             else
                 armPower = 0f;
 
             arm.setPower(-armPower);
 
-            // controlling the wings
+            if(gamepad2.b)
+                thrower.setPosition(1);
+            else
+                thrower.setPosition(0);
 
+            // controlling the wings
             leftWing.setPosition(Range.scale(gamepad2.left_trigger, 0, 1, 0.5, 1));
             rightWing.setPosition(Range.scale(gamepad2.right_trigger, 0, 1, 1, 0.2));
 
@@ -100,21 +84,42 @@ public class TeleOp extends LinearOpMode
 
     void initHardware()
     {
-        arm = hardwareMap.dcMotor.get("arm");
-        arm_controller = hardwareMap.dcMotorController.get("tetrix");
-        arm.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        try
+        {
+            arm = hardwareMap.dcMotor.get("arm");
+            arm.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "arm motor and controller setup");
+        }
 
-        wfr = hardwareMap.dcMotor.get("wfr");
-        wbr = hardwareMap.dcMotor.get("wbr");
-        wfl = hardwareMap.dcMotor.get("wfl");
-        wbl = hardwareMap.dcMotor.get("wbl");
+        try
+        {
+            wfr = hardwareMap.dcMotor.get("wfr");
+            wbr = hardwareMap.dcMotor.get("wbr");
+            wfl = hardwareMap.dcMotor.get("wfl");
+            wbl = hardwareMap.dcMotor.get("wbl");
 
-        thrower = hardwareMap.servo.get("thrower");
-        leftWing = hardwareMap.servo.get("left_wing");
-        rightWing = hardwareMap.servo.get("right_wing");
+            wbr.setDirection(DcMotor.Direction.REVERSE);
+            wfr.setDirection(DcMotor.Direction.REVERSE);
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "driving wheels setup");
+        }
 
-        wbr.setDirection(DcMotor.Direction.REVERSE);
-        wfr.setDirection(DcMotor.Direction.REVERSE);
+        try
+        {
+            thrower = hardwareMap.servo.get("thrower");
+            leftWing = hardwareMap.servo.get("left_wing");
+            rightWing = hardwareMap.servo.get("right_wing");
+        }
+        catch (Exception e)
+        {
+            telemetry.addData("[ERROR]:", "servo setup");
+        }
+
     }
 
     void setWheelPower(float left, float right)
@@ -129,8 +134,9 @@ public class TeleOp extends LinearOpMode
     // experimental scaling method for controller:
     float scaleInput(float input)
     {
+        input = Range.clip(input, -1, 1);
         if (input > 0)
-            return (float)Math.pow(input, 2);
-        return -(float)Math.pow(input, 2);
+            return (float)Math.pow(input, 4);
+        return -(float)Math.pow(input, 4);
     }
 }
