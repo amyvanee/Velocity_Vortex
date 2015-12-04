@@ -29,13 +29,37 @@ public class Auto extends LinearOpMode {
         setPower(0.5f);
         while (!done) {
             if (isOnLine()) {
-                setPower(-0.5f, 0.5f);
+                sleep(100);
+                setPower(0.5f, -0.5f);
                 sleep(450);
+                setPower(0.5f);
+                sleep(150);
+                setPower(-.5f, .5f); //90 degree turn left
+                sleep(800);
                 setPower(0);
                 sleep(1000);
+
+                /*
+                setPower(0.5f);
+                sleep(250);
+                setPower(0);
+                sleep(1000);
+                 */
+
                 thrower.setPosition(1);
                 sleep(2000);
                 thrower.setPosition(0);
+
+                /*
+                setPower(-0.5f, 0.5f)
+                sleep(800);
+                setPower(0);
+                sleep(1000);
+                setPower(0.5f);
+                sleep(1000);
+                setPower(0);
+                 */
+
                 done = true;
             }
         }
@@ -43,7 +67,7 @@ public class Auto extends LinearOpMode {
 
 
         }
-    }
+
 
     void initHardware() {
         try {
