@@ -38,9 +38,9 @@ public class TeleOp extends LinearOpMode {
 
             // allows for tighter point turns
             if (Math.abs(turnPower) > 0)
-                setWheelPower(-turnPower, turnPower);
+                setPower(-turnPower, turnPower);
             else
-                setWheelPower(wheelPower, wheelPower);
+                setPower(wheelPower);
 
             // b will allow control of thrower
             if(gamepad1.b)
@@ -105,7 +105,14 @@ public class TeleOp extends LinearOpMode {
 
     }
 
-    void setWheelPower(float left, float right) {
+    void setPower (float power) {
+        wfr.setPower(power);
+        wbr.setPower(power);
+        wfl.setPower(power);
+        wbl.setPower(power);
+    }
+
+    void setPower(float left, float right) {
         // write the values to the motors
         wfr.setPower(right);
         wbr.setPower(right);

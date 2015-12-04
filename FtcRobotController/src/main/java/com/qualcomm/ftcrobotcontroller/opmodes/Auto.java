@@ -15,6 +15,7 @@ public class Auto extends LinearOpMode {
     Servo thrower, left_wing, right_wing;
 
     private double oldLeft = 0, oldRight = 0;
+    private boolean done = false;
     //private int state = 0;
 
     @Override
@@ -25,13 +26,22 @@ public class Auto extends LinearOpMode {
         telemetry.addData("State", "Ready to Start");//dont press start until you see this
         waitForStart(); //waits fo start button to be pressed
 
-        setPower(0.05f);
-        while (opModeIsActive()) {
+        setPower(0.5f);
+        while (!done) {
             if (isOnLine()) {
+                setPower(-0.5f, 0.5f);
+                sleep(450);
                 setPower(0);
+                sleep(1000);
                 thrower.setPosition(1);
+                sleep(2000);
+                thrower.setPosition(0);
+                done = true;
             }
+        }
             waitOneFullHardwareCycle();
+
+
         }
     }
 
@@ -68,18 +78,18 @@ public class Auto extends LinearOpMode {
 
     void setPower(float left, float right) {
         // write the values to the motors
-        wfr.setPower(right);
-        wbr.setPower(right);
-        wfl.setPower(left);
-        wbl.setPower(left);
+        wfr.setPower(-right);
+        wbr.setPower(-right);
+        wfl.setPower(-left);
+        wbl.setPower(-left);
     }
 
     void setPower(float power) {
         // write the values to the motors
-        wfr.setPower(power);
-        wbr.setPower(power);
-        wfl.setPower(power);
-        wbl.setPower(power);
+        wfr.setPower(-power);
+        wbr.setPower(-power);
+        wfl.setPower(-power);
+        wbl.setPower(-power);
     }
 
     /* Got rid of this for testing
