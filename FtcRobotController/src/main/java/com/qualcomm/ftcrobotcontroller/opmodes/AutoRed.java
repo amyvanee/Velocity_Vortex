@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
-public class AutoBlueDelay extends LinearOpMode {
+public class AutoRed extends LinearOpMode {
     ColorSensor floor;
     // UltrasonicSensor ultraSensor;
 
@@ -26,18 +26,17 @@ public class AutoBlueDelay extends LinearOpMode {
         telemetry.addData("State", "Ready to Start");//dont press start until you see this
         waitForStart(); //waits fo start button to be pressed
 
-        sleep(10000);
         setPower(0.25f);
         while (!done) {
             if (isOnLine()) {
                 setPower(0);
                 done = true;
                 sleep(100);
-                setPower(0.5f, -0.5f); //turn right
+                setPower(-0.5f, 0.5f); //turn right
                 sleep(500);
                 setPower(0.5f); //forward
                 sleep(300);
-                setPower(-.5f, .5f);//90 degree turn left
+                setPower(.5f, -.5f);//90 degree turn left
                 sleep(1600);
                 setPower(0.5f); //stop to throw in
                 sleep(600);
@@ -48,7 +47,7 @@ public class AutoBlueDelay extends LinearOpMode {
                     thrower.setPosition(0);
                 }
             }
-            if(getRuntime() > 10010){
+            if(getRuntime() > 10){
                 setPower(0);
                 done = true;
             }
@@ -97,7 +96,7 @@ public class AutoBlueDelay extends LinearOpMode {
 
     private boolean isOnLine() {
         return floor.green() > 110 && floor.blue() > 110 && floor.red() > 110;
-    }
+}
 
     void setPower(float left, float right) {
         // write the values to the motors

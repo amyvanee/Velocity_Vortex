@@ -8,247 +8,115 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 public class AutoBlue extends LinearOpMode {
-    ColorSensor adafruit, floor;
-    UltrasonicSensor ultraSensor;
+    ColorSensor floor;
+    // UltrasonicSensor ultraSensor;
 
-    DcMotor br, fr, bl, fl;
-    Servo servo, beacon;
+    DcMotor wbr, wfr, wbl, wfl;
+    Servo thrower, left_wing, right_wing;
 
     private double oldLeft = 0, oldRight = 0;
-    private int state = 0, secondState = 0;
+
+    boolean done = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        try {
-            floor = hardwareMap.colorSensor.get("floor");
-            ultraSensor = hardwareMap.ultrasonicSensor.get("ultraSensor");
-
-            servo = hardwareMap.servo.get("thrower");
-
-            beacon = hardwareMap.servo.get("beacon");
-
-            adafruit = hardwareMap.colorSensor.get("color");
-        } catch (Exception e) {
-            error(e);
-        }
-
-        try {
-            br = hardwareMap.dcMotor.get("wbr");
-            br.setDirection(DcMotor.Direction.REVERSE);
-            br.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        } catch (Exception e) {
-            br = null;
-            error(e, "WBR");
-        }
-
-        try {
-            fr = hardwareMap.dcMotor.get("wfr");
-            fr.setDirection(DcMotor.Direction.REVERSE);
-            fr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        } catch (Exception e) {
-            fr = null;
-            error(e, "WFR");
-        }
-
-        try {
-            fl = hardwareMap.dcMotor.get("wfl");
-            fl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        } catch (Exception e) {
-            br = null;
-            error(e, "WFL");
-        }
-
-        try {
-            bl = hardwareMap.dcMotor.get("wbl");
-            bl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        } catch (Exception e) {
-            bl = null;
-            error(e, "WBL");
-        }
-
-
-        waitOneFullHardwareCycle();
-        resetEncoders();
-
-        bl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        br.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        fl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        fr.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
+        initHardware();
 
         waitOneFullHardwareCycle();
         telemetry.addData("State", "Ready to Start");//dont press start until you see this
         waitForStart(); //waits fo start button to be pressed
 
-        while (opModeIsActive()) {
-            switch (state) {
-                case 0:
-                    setPower(0.05f); // good speed for reading value
-                    state++;
-                    break;
-
-                case 1:
-                    if (isOnLine()) {
-                        setPower(0);
-                        state++;
-                    }
-                    break;
-
-                case 2:
-                    turn(-0.05f, 0.05f);
-                    state++;
-                    break;
-
-                case 7:
-                case 3:
-                    if(testTurn(45)){
-                        state++;
-                    }
-                    break;
-
-                case 4:
-                    drive(0.05f);
-                    state++;
-                    break;
-
-                case 5:
-                    if(testDrive(6)){
-                        state++;
-                    }
-                    break;
-
-                case 6:
-                    turn(0.05f, -0.05f);
-                    state++;
-                    break;
-
-                case 8:
-                    servo.setPosition(1);
-                    sleep(1000);
-                    servo.setPosition(0);
-                    state++;
-                    break;
-
-                default:
-                    break;
+        setPower(0.25f);
+        while (!done) {
+            if (isOnLine()) {
+                setPower(0);
+                done = true;
+                sleep(100);
+                setPower(0.5f, -0.5f); //turn right
+                sleep(500);
+                setPower(0.5f); //forward
+                sleep(300);
+                setPower(-.5f, .5f);//90 degree turn left
+                sleep(1600);
+                setPower(0.5f); //stop to throw in
+                sleep(600);
+                setPower(0);
+                if(isOnLine()) {
+                    thrower.setPosition(0.7);
+                    sleep(2000);
+                    thrower.setPosition(0);
+                }
             }
-
-            telemetry.addData("State", state);
-            telemetry.addData("Second State", secondState);
-
-            telemetry.addData("R", floor.red());
-            telemetry.addData("G", floor.green());
-            telemetry.addData("B", floor.blue());
-
-            telemetry.addData("BR", br.getCurrentPosition());
-            telemetry.addData("FR", fr.getCurrentPosition());
-            telemetry.addData("BL", bl.getCurrentPosition());
-            telemetry.addData("FL", fl.getCurrentPosition());
-
+            if(getRuntime() > 10){
+                setPower(0);
+                done = true;
+            }
+            telemetry.addData("Time", getRuntime());
             waitOneFullHardwareCycle();
         }
+    }
 
+    boolean reachedDist(int dist) {
+        double distance = 5 * Math.PI;
+        return wfl.getCurrentPosition() > distance;
+    }
+
+    void initHardware() {
+        try {
+            wfr = hardwareMap.dcMotor.get("wfr");
+            wbr = hardwareMap.dcMotor.get("wbr");
+            wfl = hardwareMap.dcMotor.get("wfl");
+            wbl = hardwareMap.dcMotor.get("wbl");
+
+            wbr.setDirection(DcMotor.Direction.REVERSE);
+            wfr.setDirection(DcMotor.Direction.REVERSE);
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "driving wheels setup");
+        }
+
+        try {
+            thrower = hardwareMap.servo.get("thrower");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "thrower servo setup");
+        }
+
+        try {
+            floor = hardwareMap.colorSensor.get("floor");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "floor color sensor setup");
+        }
+        /*
+        try {
+            ultraSensor = hardwareMap.ultrasonicSensor.get("ultraSensor");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "Ultrasonic sensor setup");
+        }
+        */
     }
 
     private boolean isOnLine() {
-        return floor.green() > 20 && floor.blue() > 20 && floor.red() > 20;
-    }
-
-    private double getBeaconR() {
-        return adafruit.red() * 255 / 800;
-    }
-
-    private double getBeaconB() {
-        return adafruit.blue() * 255 / 800;
-    }
-
-    private void setPower(float i, float i2) {
-        if (br != null)
-            br.setPower(-i2);
-        if (fr != null)
-            fr.setPower(-i2);
-        if (bl != null)
-            bl.setPower(-i);
-        if (fl != null)
-            fl.setPower(-i);
-    }
-
-    private void setPower(float i) {
-        if (br != null)
-            br.setPower(-i);
-        if (fr != null)
-            fr.setPower(-i);
-        if (bl != null)
-            bl.setPower(-i);
-        if (fl != null)
-            fl.setPower(-i);
-    }
-
-    private void resetEncoders() {
-        oldLeft = fl.getCurrentPosition();
-        oldRight = fr.getCurrentPosition();
-        try {
-            waitOneFullHardwareCycle();
-        } catch (Exception e) {
-            error(e);
-        }
-    }
-
-    private double getLeft() {
-        return Math.abs(fl.getCurrentPosition() - oldLeft);
-    }
-
-    private double getRight() {
-        return Math.abs(fr.getCurrentPosition() - oldRight);
-    }
-
-    final double DIAMETER = 5; //5 inch wheels
-    final double DIAGONAL_ROBOT = 24;//need to make more exact
-    final double CIRCUMFERENCE = Math.PI * DIAMETER; // 15.7
-
-    private void turn(float lp, float rp) {
-        resetEncoders();
-        try {
-            waitOneFullHardwareCycle();
-        } catch (InterruptedException e){
-
-        }
-        setPower(lp, rp);
-    }
-
-    private boolean testTurn(double degrees){
-        double i = degrees * (((DIAGONAL_ROBOT * Math.PI) / CIRCUMFERENCE) * 280);
-        if(Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
-            setPower(0);
-            return true;
-        } else {
+        if (!(floor.green() > 110 && floor.blue() > 110 && floor.red() > 110)) {
+            telemetry.addData("Color:", "Not White");
             return false;
-        }
-    }
-
-    private void drive(float p) {
-        resetEncoders();
-        setPower(p);
-
-    }
-
-    private boolean testDrive(double distance){
-        double i = (distance / CIRCUMFERENCE) * 280 / 360;
-        if (Math.abs(getLeft()) >= i && Math.abs(getRight()) >= i) {
-            setPower(0);
+        } else {
+            telemetry.addData("Color: ", "Is White");
             return true;
         }
-        return false;
     }
 
-    private void done() {
-        telemetry.addData("Finished in ", getRuntime());
+    void setPower(float left, float right) {
+        // write the values to the motors
+        wfr.setPower(-right);
+        wbr.setPower(-right);
+        wfl.setPower(-left);
+        wbl.setPower(-left);
     }
 
-    private void error(Exception e) {
-        telemetry.addData("Error", e.getStackTrace());
-    }
-
-    private void error(Exception e, String s) {
-        telemetry.addData("Error", e.getStackTrace());
+    void setPower(float power) {
+        // write the values to the motors
+        wfr.setPower(-power);
+        wbr.setPower(-power);
+        wfl.setPower(-power);
+        wbl.setPower(-power);
     }
 }

@@ -13,13 +13,6 @@ public class ColorTest extends LinearOpMode {
         } catch (Exception e) {
             telemetry.addData("Error", "Floor Color " + e.getStackTrace());
         }
-        /*
-        try {
-            beacon = hardwareMap.colorSensor.get("beacon");
-        } catch (Exception e) {
-            telemetry.addData("Error", "Beacon Color " + e.getStackTrace());
-        }
-        */
 
         waitForStart();
 

@@ -25,7 +25,7 @@ public class TeleOp extends LinearOpMode {
             // gamepad1:
             // ----------------
 
-            wheelPower = -gamepad1.left_stick_y;
+            wheelPower = gamepad1.left_stick_y;
             turnPower = -gamepad1.right_stick_x;
 
             if (gamepad1.right_bumper) {
@@ -42,17 +42,11 @@ public class TeleOp extends LinearOpMode {
             else
                 setPower(wheelPower);
 
-            // b will allow control of thrower
-            if(gamepad1.b)
-                thrower.setPosition(1);
-            else
-                thrower.setPosition(0);
-
             // --------------
             // gamepad2;
             // --------------
 
-            // must hold down a before being able to move arm (a for activate)
+            // must hold down 'a' before being able to move arm (a for activate)
             if (gamepad2.a) {
                 armPower = -gamepad2.left_stick_y;
                 armPower = scaleInput(armPower);
@@ -62,13 +56,13 @@ public class TeleOp extends LinearOpMode {
 
             arm.setPower(-armPower);
 
-            if(gamepad2.b)
+            if(gamepad1.a)
                 thrower.setPosition(1);
             else
                 thrower.setPosition(0);
 
             // controlling the wings
-            leftWing.setPosition(Range.scale(gamepad2.left_trigger, 0, 1, 1, 0.5));
+            leftWing.setPosition(Range.scale(gamepad2.left_trigger, 0, 1, 1, 0.2));
             rightWing.setPosition(Range.scale(gamepad2.right_trigger, 0, 1, 0.2, 1));
 
             waitOneFullHardwareCycle();

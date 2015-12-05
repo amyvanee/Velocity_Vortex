@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
-public class AutoBlueDelay extends LinearOpMode {
+public class AutoRedDelay extends LinearOpMode {
     ColorSensor floor;
     // UltrasonicSensor ultraSensor;
 
@@ -33,11 +33,11 @@ public class AutoBlueDelay extends LinearOpMode {
                 setPower(0);
                 done = true;
                 sleep(100);
-                setPower(0.5f, -0.5f); //turn right
+                setPower(-0.5f, 0.5f); //turn right
                 sleep(500);
                 setPower(0.5f); //forward
                 sleep(300);
-                setPower(-.5f, .5f);//90 degree turn left
+                setPower(.5f, -.5f);//90 degree turn left
                 sleep(1600);
                 setPower(0.5f); //stop to throw in
                 sleep(600);
@@ -86,13 +86,6 @@ public class AutoBlueDelay extends LinearOpMode {
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "floor color sensor setup");
         }
-        /*
-        try {
-            ultraSensor = hardwareMap.ultrasonicSensor.get("ultraSensor");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]:", "Ultrasonic sensor setup");
-        }
-        */
     }
 
     private boolean isOnLine() {
