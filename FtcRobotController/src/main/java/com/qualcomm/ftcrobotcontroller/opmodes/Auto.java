@@ -31,12 +31,12 @@ public class Auto extends LinearOpMode {
             if (isOnLine()) {
                 setPower(0);
                 sleep(100);
-                setPower(0.5f, -0.5f);
+                setPower(-0.5f, 0.5f);
                 sleep(450);
                 setPower(0.5f);
                 sleep(150);
-                setPower(-.5f, .5f);//90 degree turn left
-                sleep(900);
+                setPower(.5f, -.5f);//90 degree turn left
+                sleep(1000);
                 setPower(0);
                 sleep(1000);
 
@@ -45,7 +45,7 @@ public class Auto extends LinearOpMode {
 //                setPower(0);
 //                sleep(1000);
 
-                thrower.setPosition(1);
+                thrower.setPosition(0.752);
                 sleep(2000);
                 thrower.setPosition(0);
 
@@ -67,6 +67,10 @@ public class Auto extends LinearOpMode {
 
         }
 
+    boolean reachedDist(int dist){
+        double distance = 5 * Math.PI;
+        return wfl.getCurrentPosition() > distance;
+    }
 
     void initHardware() {
         try {
