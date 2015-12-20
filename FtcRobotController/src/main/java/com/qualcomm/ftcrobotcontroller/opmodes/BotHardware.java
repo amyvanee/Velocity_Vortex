@@ -87,6 +87,7 @@ public class BotHardware extends LinearOpMode {
     }
 
     // distance is in inches
+    // Currently only works once during run. Restart robot to use again
     void driveDistance(float power, float distance) {
         resetEncoders();
         enableEncoders(true);
@@ -103,6 +104,23 @@ public class BotHardware extends LinearOpMode {
         }
         setPower(0f);
         enableEncoders(false);
+    }
+
+    void turnDegrees(float power, int degrees, boolean right) {
+        gyro.resetZAxisIntegrator();
+        if (right) {
+            setPower(power, -power);
+        } else {
+            setPower(-power, power);
+        }
+        while (Math.abs(gyro.getHeading()) < degrees) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                telemetry.addData("[ERROR]:", "distance wait");
+            }
+        }
+        setPower(0f);
     }
 
     void resetEncoders() {
