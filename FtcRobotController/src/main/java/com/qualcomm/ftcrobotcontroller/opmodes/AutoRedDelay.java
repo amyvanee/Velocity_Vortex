@@ -17,6 +17,7 @@ public class AutoRedDelay extends LinearOpMode {
     private double oldLeft = 0, oldRight = 0;
 
     boolean done = false;
+    double timer = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -25,30 +26,27 @@ public class AutoRedDelay extends LinearOpMode {
         waitOneFullHardwareCycle();
         telemetry.addData("State", "Ready to Start");//dont press start until you see this
         waitForStart(); //waits fo start button to be pressed
-
+        timer = getRuntime();
         sleep(10000);
         setPower(0.25f);
         while (!done) {
             if (isOnLine()) {
+                sleep(200);
                 setPower(0);
                 done = true;
                 sleep(100);
-                setPower(-0.5f, 0.5f); //turn right
-                sleep(500);
+                setPower(0.5f, -0.5f); //turn right
+                sleep(400);
                 setPower(0.5f); //forward
-                sleep(300);
-                setPower(.5f, -.5f);//90 degree turn left
-                sleep(1600);
-                setPower(0.5f); //stop to throw in
-                sleep(600);
+                sleep(500);
                 setPower(0);
-                if(isOnLine()) {
+                if (isOnLine()) {
                     thrower.setPosition(0.7);
                     sleep(2000);
                     thrower.setPosition(0);
                 }
             }
-            if(getRuntime() > 10010){
+            if (getRuntime() - timer > 20) {
                 setPower(0);
                 done = true;
             }
@@ -86,6 +84,13 @@ public class AutoRedDelay extends LinearOpMode {
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "floor color sensor setup");
         }
+        /*
+        try {
+            ultraSensor = hardwareMap.ultrasonicSensor.get("ultraSensor");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "Ultrasonic sensor setup");
+        }
+        */
     }
 
     private boolean isOnLine() {
