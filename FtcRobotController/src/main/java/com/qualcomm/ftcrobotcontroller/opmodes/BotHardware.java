@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 
@@ -16,11 +17,13 @@ public class BotHardware extends LinearOpMode {
     final protected double wheelCircumference = 5 * 3.1416;
     final protected int degreeError = 2;
     final protected int whiteLevel = 120;
+    final protected int wallDistances = 5;
 
     protected DcMotor wfl, wbl, wfr, wbr, arm;
     protected Servo thrower, leftWing, rightWing;
     protected ColorSensor groundLeft, groundRight, beacon;
-    private GyroSensor gyro;
+    protected GyroSensor gyro;
+    protected UltrasonicSensor sonar;
 
     void initHardware() {
         try {
@@ -63,6 +66,12 @@ public class BotHardware extends LinearOpMode {
             gyro.calibrate();
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "gyro sensor setup");
+        }
+
+        try {
+            sonar = hardwareMap.ultrasonicSensor.get("sonar");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "sonar sensor setup");
         }
     }
 
@@ -152,6 +161,20 @@ public class BotHardware extends LinearOpMode {
         }
     }
 
+    boolean isAtWall() {
+        return sonar.getUltrasonicLevel() < wallDistances;
+    }
+
+    void dumpClimbers() {
+        thrower.setPosition(1);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            // nothing
+        }
+        thrower.setPosition(0);
+    }
+
     void resetEncoders() {
         wfr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
         wbr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
@@ -171,6 +194,11 @@ public class BotHardware extends LinearOpMode {
             wfl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
             wbl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
         }
+    }
+
+    // subject to change
+    boolean isBeaconRed() {
+        return beacon.red() > 100 && beacon.blue() < 90;
     }
 
     @Override
