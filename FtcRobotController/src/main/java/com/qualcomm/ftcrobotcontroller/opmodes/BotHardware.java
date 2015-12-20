@@ -14,6 +14,8 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 public class BotHardware extends LinearOpMode {
     final protected float autoPower = 0.5f;
     final protected double wheelCircumference = 5 * 3.1416;
+    final protected int degreeError = 2;
+    final protected int whiteLevel = 120;
 
     protected DcMotor wfl, wbl, wfr, wbr, arm;
     protected Servo thrower, leftWing, rightWing;
@@ -121,6 +123,33 @@ public class BotHardware extends LinearOpMode {
             }
         }
         setPower(0f);
+    }
+
+    // will be in a loop (correction might be jerky, will test)
+    void driveStraightGryo(float power) {
+        setPower(power);
+        gyro.resetZAxisIntegrator();
+        if (gyro.getHeading() > degreeError)
+            setPower(-power, power);
+        else if (gyro.getHeading() < -degreeError)
+            setPower(power, -power);
+    }
+
+    // will be in a loop (correction might be jerky, will test)
+    void driveStraightLine(float power) {
+        setPower(power);
+        if (isOnLine(true))
+            setPower(power, -power);
+        else if (isOnLine(false))
+            setPower(-power, power);
+    }
+
+    boolean isOnLine(boolean right) {
+        if (right) {
+            return groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel;
+        } else {
+            return groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel;
+        }
     }
 
     void resetEncoders() {
