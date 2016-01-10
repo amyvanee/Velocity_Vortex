@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
-public class AutoBlue extends BotHardware {
+public class Display extends BotHardware {
     final private double wheelCircumference = 5 * Math.PI;
     final private short degreeError = 2;
     final private short whiteLevel = 25;
@@ -29,52 +29,27 @@ public class AutoBlue extends BotHardware {
     private ModernRoboticsI2cGyro gyro;
     private UltrasonicSensor sonar;
 
+    private short rounds = 0;
+
     @Override
     public void runOpMode() throws InterruptedException {
         initHardware();
         waitForStart();
 
         while (opModeIsActive()) {
-            while (gyro.isCalibrating()) {
-                Thread.sleep(50);
-            }
+            while (rounds < 5){
+                leftWing.setPosition(1);
+                rightWing.setPosition(1);
 
-            switch (state) {
-                case 0: //starting turn to get ready
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(3000);
-                    turnDegrees(0.15f, 45);
-                    state++;
-                    break;
-                case 1: //drive forward until line
-                    driveStraightGyro(0.2f);
-                    if (isOnLine(true))
-                        setPower(0, 0);
-                    state++;
-                    break;
-                case 2: //turn left on line
-                    turnDegrees(0.15f, 45);
-                    state++;
-                    break;
-                case 3: //drive forward along line
-                    driveToDistance(0.25f, 25);
-                    state++;
-                    break;
-                case 4:
-                    //push beacon button
-                    state++;
-                    break;
-                case 5:
-                    //dump climbers
-                    state++;
-                    break;
-                case 6: //maybe turn -90 degrees and park on right side
-                    turnDegrees(0.15f, 90);
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(500);
-                    setPower(0, 0);
-                    state++;
-                    break;
+                turnDegrees(0.1f, 360);
+                while (gyro.getIntegratedZValue() < 360){
+                    leftWing.setPosition(0.5);
+                    rightWing.setPosition(0.5);
+                    Thread.sleep(10);
+                    leftWing.setPosition(1);
+                    rightWing.setPosition(1);
+                }
+                rounds++;
             }
         }
     }

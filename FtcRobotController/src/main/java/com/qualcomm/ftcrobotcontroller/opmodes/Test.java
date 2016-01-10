@@ -8,76 +8,68 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 import com.qualcomm.robotcore.util.Range;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
-public class AutoBlue extends BotHardware {
-    final private double wheelCircumference = 5 * Math.PI;
-    final private short degreeError = 2;
-    final private short whiteLevel = 25;
-    final private short wallDistances = 5;
+public class Test extends LinearOpMode {
+    final protected double wheelCircumference = 5 * Math.PI;
+    final protected int degreeError = 2;
+    final protected int whiteLevel = 25;
+    final protected int wallDistances = 5;
+    protected short sonar_times = 0;
 
-    private short state = 0;
-    private short sonar_times = 0; // needed to compensate for sonar 0
+    protected DcMotor wfl, wbl, wfr, wbr, arm;
+    protected Servo thrower, leftWing, rightWing;
+    protected ColorSensor groundLeft, groundRight, beacon;
+    protected ModernRoboticsI2cGyro gyro;
+    protected UltrasonicSensor sonar;
+    int state = 0;
 
-    private DcMotor wfl, wbl, wfr, wbr, arm;
-    private ColorSensor groundLeft, groundRight, beacon;
-    private ModernRoboticsI2cGyro gyro;
-    private UltrasonicSensor sonar;
-
-    @Override
     public void runOpMode() throws InterruptedException {
         initHardware();
+
         waitForStart();
 
         while (opModeIsActive()) {
             while (gyro.isCalibrating()) {
                 Thread.sleep(50);
             }
+            telemetry.addData("Gyro Z", gyro.getIntegratedZValue());
 
-            switch (state) {
-                case 0: //starting turn to get ready
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(3000);
-                    turnDegrees(0.15f, 45);
+            driveToDistance(0.2f, 25);
+            Thread.sleep(100);
+/*
+            if (sonar_times < 2) {
+                driveStraightGryo(0.2f);
+                double level = sonar.getUltrasonicLevel();
+                telemetry.addData("Sonar", level);
+                if (level < 40) {
+                    sonar_times++;
+                } else {
+                    sonar_times = 0;
+                }
+            }
+            if (sonar_times == 2) {
+                setPower(0, 0);
+                sonar_times++;
+            }
+            Thread.sleep(100);
+
+
+
+            if (state < 1) {
+                if (isOnLine(false)) {
                     state++;
-                    break;
-                case 1: //drive forward until line
-                    driveStraightGyro(0.2f);
-                    if (isOnLine(true))
-                        setPower(0, 0);
-                    state++;
-                    break;
-                case 2: //turn left on line
-                    turnDegrees(0.15f, 45);
-                    state++;
-                    break;
-                case 3: //drive forward along line
-                    driveToDistance(0.25f, 25);
-                    state++;
-                    break;
-                case 4:
-                    //push beacon button
-                    state++;
-                    break;
-                case 5:
-                    //dump climbers
-                    state++;
-                    break;
-                case 6: //maybe turn -90 degrees and park on right side
-                    turnDegrees(0.15f, 90);
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(500);
+                    turnDegrees(0.18f, -90);
                     setPower(0, 0);
-                    state++;
-                    break;
+                }
+                Thread.sleep(100);
+            }
+            */
             }
         }
-    }
+
+
+
+    // BotHardware Methods:
 
     void initHardware() {
         try {
@@ -183,7 +175,7 @@ public class AutoBlue extends BotHardware {
     }
 
     // will be in a loop (correction might be jerky, will test)
-    void driveStraightGyro(float power) {
+    void driveStraightGryo(float power) {
         setPower(power);
         double angle = gyro.getIntegratedZValue();
         if (angle > degreeError) {

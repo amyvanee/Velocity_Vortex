@@ -1,5 +1,6 @@
 package com.qualcomm.ftcrobotcontroller.opmodes;
 
+import com.qualcomm.hardware.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
  * IMPORTANT: do not move robot after hitting init
  */
 public class BotHardware extends LinearOpMode {
+
     final protected float autoPower = 0.5f;
     final protected double wheelCircumference = 5 * 3.1416;
     final protected int degreeError = 2;
@@ -22,7 +24,7 @@ public class BotHardware extends LinearOpMode {
     protected DcMotor wfl, wbl, wfr, wbr, arm;
     protected Servo thrower, leftWing, rightWing;
     protected ColorSensor groundLeft, groundRight, beacon;
-    protected GyroSensor gyro;
+    protected ModernRoboticsI2cGyro gyro;
     protected UltrasonicSensor sonar;
 
     void initHardware() {
@@ -54,6 +56,21 @@ public class BotHardware extends LinearOpMode {
         }
 
         try {
+            gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "gyro sensor setup");
+        }
+
+        try {
+            gyro.calibrate();
+            while (gyro.isCalibrating()) {
+                sleep(50);
+            }
+        } catch (Exception e) {
+            telemetry.addData("[ERROR]:", "calibrating issue");
+        }
+
+        try {
             groundLeft = hardwareMap.colorSensor.get("ground_left");
             groundRight = hardwareMap.colorSensor.get("ground_right");
             beacon = hardwareMap.colorSensor.get("beacon");
@@ -62,7 +79,7 @@ public class BotHardware extends LinearOpMode {
         }
 
         try {
-            gyro = hardwareMap.gyroSensor.get("gyro");
+            gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
             gyro.calibrate();
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "gyro sensor setup");
@@ -124,7 +141,7 @@ public class BotHardware extends LinearOpMode {
         } else {
             setPower(-power, power);
         }
-        while (Math.abs(gyro.getHeading()) < degrees) {
+        while (Math.abs(gyro.getIntegratedZValue()) < degrees) {
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
@@ -138,10 +155,12 @@ public class BotHardware extends LinearOpMode {
     void driveStraightGryo(float power) {
         setPower(power);
         gyro.resetZAxisIntegrator();
-        if (gyro.getHeading() > degreeError)
+        if (gyro.getIntegratedZValue() > degreeError)
             setPower(-power, power);
-        else if (gyro.getHeading() < -degreeError)
+        else if (gyro.getIntegratedZValue() < -degreeError)
             setPower(power, -power);
+        else
+            setPower(power, power);
     }
 
     // will be in a loop (correction might be jerky, will test)
