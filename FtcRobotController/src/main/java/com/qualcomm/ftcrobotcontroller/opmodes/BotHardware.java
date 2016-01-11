@@ -14,20 +14,19 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
  * IMPORTANT: do not move robot after hitting init
  */
 public class BotHardware extends LinearOpMode {
+    final int degreeError = 2;
+    final int whiteLevel = 120;
+    final int wallDistances = 5;
 
-    final protected float autoPower = 0.5f;
-    final protected double wheelCircumference = 5 * 3.1416;
-    final protected int degreeError = 2;
-    final protected int whiteLevel = 120;
-    final protected int wallDistances = 5;
+    DcMotor wfl, wbl, wfr, wbr, arm;
+    Servo thrower, leftWing, rightWing, beaconServo;
+    ColorSensor groundLeft, groundRight, beacon;
+    ModernRoboticsI2cGyro gyro;
+    UltrasonicSensor sonar;
 
-    protected DcMotor wfl, wbl, wfr, wbr, arm;
-    protected Servo thrower, leftWing, rightWing;
-    protected ColorSensor groundLeft, groundRight, beacon;
-    protected ModernRoboticsI2cGyro gyro;
-    protected UltrasonicSensor sonar;
 
-    void initHardware() {
+    @Override
+    public void runOpMode() throws InterruptedException {
         try {
             arm = hardwareMap.dcMotor.get("arm");
             arm.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
@@ -43,6 +42,12 @@ public class BotHardware extends LinearOpMode {
 
             wbr.setDirection(DcMotor.Direction.REVERSE);
             wfr.setDirection(DcMotor.Direction.REVERSE);
+
+            wfr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+            wbr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+            wfl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+            wbl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "driving wheels setup");
         }
@@ -51,23 +56,9 @@ public class BotHardware extends LinearOpMode {
             thrower = hardwareMap.servo.get("thrower");
             leftWing = hardwareMap.servo.get("left_wing");
             rightWing = hardwareMap.servo.get("right_wing");
+            beaconServo = hardwareMap.servo.get("beaconServo");
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "servo setup");
-        }
-
-        try {
-            gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]:", "gyro sensor setup");
-        }
-
-        try {
-            gyro.calibrate();
-            while (gyro.isCalibrating()) {
-                sleep(50);
-            }
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]:", "calibrating issue");
         }
 
         try {
@@ -90,6 +81,20 @@ public class BotHardware extends LinearOpMode {
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "sonar sensor setup");
         }
+
+        while (gyro.isCalibrating()) {
+            Thread.sleep(50);
+        }
+
+        waitForStart();
+
+        startTime = this.getRuntime();
+    }
+
+    double startTime;
+
+    double getTime(){
+        return getRuntime() - startTime;
     }
 
     void setPower (float power) {
@@ -114,47 +119,30 @@ public class BotHardware extends LinearOpMode {
         return -(float)Math.pow(input, 4);
     }
 
-    // distance is in inches
-    // Currently only works once during run. Restart robot to use again
-    void driveDistance(float power, float distance) {
-        resetEncoders();
-        enableEncoders(true);
-        setPower(power);
-        int pos = (int)((distance / wheelCircumference) * 1120);
-        while (Math.abs(wbl.getCurrentPosition()) < pos) {
-            telemetry.addData("Motor Position", Math.abs(wbl.getCurrentPosition()));
-            telemetry.addData("Motor Target", pos);
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                telemetry.addData("[ERROR]:", "distance wait");
-            }
-        }
-        setPower(0f);
-        enableEncoders(false);
-    }
 
-    void turnDegrees(float power, int degrees, boolean right) {
+    boolean turnDegrees(float power, int degrees) {
         gyro.resetZAxisIntegrator();
-        if (right) {
+        if (degrees < 0) {
             setPower(power, -power);
-        } else {
+        } else if (degrees > 0){
             setPower(-power, power);
         }
-        while (Math.abs(gyro.getIntegratedZValue()) < degrees) {
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                telemetry.addData("[ERROR]:", "distance wait");
-            }
+        if(Math.abs(gyro.getIntegratedZValue()) < Math.abs(degrees)) {
+            setPower(0);
+            return true;
         }
-        setPower(0f);
+        return false;
+    }
+
+    void driveGyroStart(float power){
+        setPower(0);
+        gyro.resetZAxisIntegrator();
+        setPower(power);
     }
 
     // will be in a loop (correction might be jerky, will test)
-    void driveStraightGryo(float power) {
+    void driveGyro(float power) {
         setPower(power);
-        gyro.resetZAxisIntegrator();
         if (gyro.getIntegratedZValue() > degreeError)
             setPower(-power, power);
         else if (gyro.getIntegratedZValue() < -degreeError)
@@ -172,16 +160,66 @@ public class BotHardware extends LinearOpMode {
             setPower(-power, power);
     }
 
-    boolean isOnLine(boolean right) {
-        if (right) {
-            return groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel;
-        } else {
-            return groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel;
-        }
+    void turnGyroStart(float left, float right){
+        setPower(0);
+        gyro.resetZAxisIntegrator();
+        setPower(left, right);
     }
 
-    boolean isAtWall() {
-        return sonar.getUltrasonicLevel() < wallDistances;
+    boolean turnGyro(double degree){
+        return Math.abs(gyro.getIntegratedZValue()) < Math.abs(degree);
+    }
+
+
+    boolean isOnLine(boolean right) {
+        return (groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel)
+                || (groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel);
+    }
+
+    void done(){
+        telemetry.addData("Finished in:", getTime());
+    }
+
+
+    //drives to correct throw dist and returns if done
+    boolean driveToDist(double dist){
+        if(sonar.getUltrasonicLevel() == dist){
+            setPower(0);
+            return true;
+        }
+
+        if(sonar.getUltrasonicLevel() > dist){
+            setPower(0.15f);
+        } else if(sonar.getUltrasonicLevel() < dist){
+            setPower(-0.15f);
+        }
+        return false;
+    }
+
+
+    double throwDist = 20;
+    boolean correctThrowDist(){
+        return driveToDist(throwDist);
+    }
+
+    double beaconDist = 5;
+    boolean correctBeaconDist(){
+        return driveToDist(beaconDist);
+    }
+
+    boolean hasPressedBeacon(){
+        return sonar.getUltrasonicLevel() < 3;
+    }
+
+    void setUpBeaconPress(){
+        if(leftSideRed())
+            beaconServo.setPosition(0);
+        else
+            beaconServo.setPosition(1);
+    }
+
+    boolean leftSideRed(){
+        return beacon.red() > beacon.blue();
     }
 
     void dumpClimbers() {
@@ -189,39 +227,7 @@ public class BotHardware extends LinearOpMode {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            // nothing
         }
         thrower.setPosition(0);
-    }
-
-    void resetEncoders() {
-        wfr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wbr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wfl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wbl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-    }
-
-    void enableEncoders(boolean encoder) {
-        if (encoder) {
-            wfr.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wbr.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wfl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wbl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        } else {
-            wfr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wbr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wfl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wbl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-        }
-    }
-
-    // subject to change
-    boolean isBeaconRed() {
-        return beacon.red() > 100 && beacon.blue() < 90;
-    }
-
-    @Override
-    public void runOpMode() throws InterruptedException {
-        // do nothing for now
     }
 }
