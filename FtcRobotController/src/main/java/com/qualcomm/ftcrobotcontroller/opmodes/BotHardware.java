@@ -142,7 +142,6 @@ public class BotHardware extends LinearOpMode {
 
     // will be in a loop (correction might be jerky, will test)
     void driveGyro(float power) {
-        setPower(power);
         if (gyro.getIntegratedZValue() > degreeError)
             setPower(-power, power);
         else if (gyro.getIntegratedZValue() < -degreeError)

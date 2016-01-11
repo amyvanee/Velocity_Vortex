@@ -17,16 +17,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 public class AutoRed extends BotHardware {
-    final private short whiteLevel = 25;
-    final private short wallDistances = 5;
-
     private short state = 0;
-    private short sonar_times = 0; // needed to compensate for sonar 0
-
-    private DcMotor wfl, wbl, wfr, wbr, arm;
-    private ColorSensor groundLeft, groundRight, beacon;
-    private ModernRoboticsI2cGyro gyro;
-    private UltrasonicSensor sonar;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -38,22 +29,6 @@ public class AutoRed extends BotHardware {
             telemetry.addData("State", state);
             telemetry.addData("Z", gyro.getIntegratedZValue());
             telemetry.addData("Sonic Dist", sonar.getUltrasonicLevel());
-
-
-            /*
-            Steps
-            Drive forward
-            turn left 45
-            drive to white line
-            hit white line and stop
-            turn left 45
-            get to distance for throwing
-
-            read beacon
-            press beacon
-
-            possibly move out of way
-             */
 
             switch (state) {
                 case 0://global start drive
