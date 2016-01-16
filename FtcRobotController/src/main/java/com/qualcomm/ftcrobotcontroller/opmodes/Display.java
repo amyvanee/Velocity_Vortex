@@ -16,6 +16,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 public class Display extends BotHardware {
+
+    /*
     final private double wheelCircumference = 5 * Math.PI;
     final private short degreeError = 2;
     final private short whiteLevel = 25;
@@ -248,4 +250,5 @@ public class Display extends BotHardware {
             sonar_times++;
         }
     }
+    */
 }

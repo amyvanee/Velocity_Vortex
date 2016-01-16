@@ -29,7 +29,7 @@ public class AutoBlue extends BotHardware {
     private ModernRoboticsI2cGyro gyro;
     private UltrasonicSensor sonar;
 
-    @Override
+    /*
     public void runOpMode() throws InterruptedException {
         initHardware();
         waitForStart();
@@ -273,4 +273,5 @@ public class AutoBlue extends BotHardware {
             sonar_times++;
         }
     }
+    */
 }

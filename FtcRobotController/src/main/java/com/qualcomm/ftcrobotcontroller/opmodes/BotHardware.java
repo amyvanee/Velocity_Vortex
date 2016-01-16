@@ -18,22 +18,20 @@ public class BotHardware extends LinearOpMode {
     final int whiteLevel = 120;
     final int wallDistances = 5;
 
-    DcMotor wfl, wbl, wfr, wbr, arm;
+    DcMotor wfl, wbl, wfr, wbr;
     Servo thrower, leftWing, rightWing, beaconServo;
     ColorSensor groundLeft, groundRight, beacon;
     ModernRoboticsI2cGyro gyro;
     UltrasonicSensor sonar;
 
+    double startTime;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        try {
-            arm = hardwareMap.dcMotor.get("arm");
-            arm.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]:", "arm motor and controller setup");
-        }
 
+    }
+
+    void initHardware() throws InterruptedException {
         try {
             wfr = hardwareMap.dcMotor.get("wfr");
             wbr = hardwareMap.dcMotor.get("wbr");
@@ -91,24 +89,23 @@ public class BotHardware extends LinearOpMode {
         startTime = this.getRuntime();
     }
 
-    double startTime;
 
     double getTime(){
         return getRuntime() - startTime;
     }
 
     void setPower (float power) {
-        wfr.setPower(power);
-        wbr.setPower(power);
-        wfl.setPower(power);
-        wbl.setPower(power);
+        wfr.setPower(-power);
+        wbr.setPower(-power);
+        wfl.setPower(-power);
+        wbl.setPower(-power);
     }
 
     void setPower(float left, float right) {
-        wfr.setPower(right);
-        wbr.setPower(right);
-        wfl.setPower(left);
-        wbl.setPower(left);
+        wfr.setPower(-right);
+        wbr.setPower(-right);
+        wfl.setPower(-left);
+        wbl.setPower(-left);
     }
 
     float scaleInput(float input) {
