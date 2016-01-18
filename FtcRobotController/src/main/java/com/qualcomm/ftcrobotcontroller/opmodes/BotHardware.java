@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
  */
 public class BotHardware extends LinearOpMode {
     final int degreeError = 2;
-    final int whiteLevel = 120;
+    final int whiteLevel = 100;
     final int wallDistances = 5;
 
     DcMotor wfl, wbl, wfr, wbr;
@@ -23,8 +23,7 @@ public class BotHardware extends LinearOpMode {
     ColorSensor groundLeft, groundRight, beacon;
     ModernRoboticsI2cGyro gyro;
     UltrasonicSensor sonar;
-
-    double startTime;
+private     double startTime = getRuntime();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -61,10 +60,15 @@ public class BotHardware extends LinearOpMode {
 
         try {
             groundLeft = hardwareMap.colorSensor.get("ground_left");
-            groundRight = hardwareMap.colorSensor.get("ground_right");
-            beacon = hardwareMap.colorSensor.get("beacon");
+//            groundRight = hardwareMap.colorSensor.get("ground_right");
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "color sensor setup");
+        }
+
+        try {
+            beacon = hardwareMap.colorSensor.get("beacon");
+        } catch (Exception e){
+            telemetry.addData("ERROR", e.getStackTrace()[1]);
         }
 
         try {
@@ -86,9 +90,12 @@ public class BotHardware extends LinearOpMode {
 
         waitForStart();
 
-        startTime = this.getRuntime();
+
     }
 
+    void setTime(){
+        startTime = this.getRuntime();
+    }
 
     double getTime(){
         return getRuntime() - startTime;
@@ -109,26 +116,10 @@ public class BotHardware extends LinearOpMode {
     }
 
     float scaleInput(float input) {
-        telemetry.addData("[TEST]:", "calling scale input");
         input = Range.clip(input, -1, 1);
         if (input > 0)
             return (float)Math.pow(input, 4);
         return -(float)Math.pow(input, 4);
-    }
-
-
-    boolean turnDegrees(float power, int degrees) {
-        gyro.resetZAxisIntegrator();
-        if (degrees < 0) {
-            setPower(power, -power);
-        } else if (degrees > 0){
-            setPower(-power, power);
-        }
-        if(Math.abs(gyro.getIntegratedZValue()) < Math.abs(degrees)) {
-            setPower(0);
-            return true;
-        }
-        return false;
     }
 
     void driveGyroStart(float power){
@@ -150,9 +141,9 @@ public class BotHardware extends LinearOpMode {
     // will be in a loop (correction might be jerky, will test)
     void driveStraightLine(float power) {
         setPower(power);
-        if (isOnLine(true))
+        if (isOnLine())
             setPower(power, -power);
-        else if (isOnLine(false))
+        else if (isOnLine())
             setPower(-power, power);
     }
 
@@ -167,9 +158,16 @@ public class BotHardware extends LinearOpMode {
     }
 
 
-    boolean isOnLine(boolean right) {
-        return (groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel)
-                || (groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel);
+    boolean isOnLine() {
+        return isRightOnLine() || isLeftOnLine();
+    }
+
+    boolean isRightOnLine(){
+        return groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel;
+    }
+
+    boolean isLeftOnLine(){
+        return groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel;
     }
 
     void done(){

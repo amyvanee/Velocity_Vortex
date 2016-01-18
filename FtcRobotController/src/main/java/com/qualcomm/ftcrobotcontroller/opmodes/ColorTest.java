@@ -9,7 +9,7 @@ public class ColorTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         try {
-            floor = hardwareMap.colorSensor.get("floor");
+            floor = hardwareMap.colorSensor.get("ground_left");
         } catch (Exception e) {
             telemetry.addData("Error", "Floor Color " + e.getStackTrace());
         }
