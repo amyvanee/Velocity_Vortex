@@ -12,6 +12,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("AutoBlueDelay", AutoBlueDelay.class);
     manager.register("ColorTest", ColorTest.class);
     manager.register("TestOpMode", TestOpMode.class);
+    manager.register("SonarCorrectionTest", SonarCorrectionTest.class);
     manager.register("Test", Test.class);
   }
 }

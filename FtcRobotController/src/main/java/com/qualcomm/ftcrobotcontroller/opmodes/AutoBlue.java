@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
+import com.qualcomm.robotcore.robocol.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -16,262 +17,183 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 public class AutoBlue extends BotHardware {
-    final private double wheelCircumference = 5 * Math.PI;
-    final private short degreeError = 2;
-    final private short whiteLevel = 25;
-    final private short wallDistances = 5;
-
     private short state = 0;
-    private short sonar_times = 0; // needed to compensate for sonar 0
+    private short close, far, good;
 
-    private DcMotor wfl, wbl, wfr, wbr, arm;
-    private ColorSensor groundLeft, groundRight, beacon;
-    private ModernRoboticsI2cGyro gyro;
-    private UltrasonicSensor sonar;
-
-    /*
+    @Override
     public void runOpMode() throws InterruptedException {
+        super.runOpMode();
+        close = far = good = 0;
         initHardware();
+
+        while (gyro.isCalibrating()) {
+            Thread.sleep(50);
+        }
+
         waitForStart();
 
+        gyro.resetZAxisIntegrator();
+
+        setTime();
+
         while (opModeIsActive()) {
-            while (gyro.isCalibrating()) {
-                Thread.sleep(50);
-            }
+            telemetry.addData("State", state);
+            telemetry.addData("Z", gyro.getIntegratedZValue());
+            telemetry.addData("Beacon Red", beacon.red());
+            telemetry.addData("Beacon Blue", beacon.blue());
+            telemetry.addData("Sonic Dist", sonar.getUltrasonicLevel());
+            telemetry.addData("Time: ", getTime());
+            telemetry.addData("Color:", groundLeft.blue());
 
             switch (state) {
-                case 0: //starting turn to get ready
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(3000);
-                    turnDegrees(0.15f, 45);
+                case 0://start drive
+                    setPower(0.25f);
                     state++;
                     break;
-                case 1: //drive forward until line
-                    driveStraightGyro(0.2f);
-                    if (isOnLine(true))
-                        setPower(0, 0);
+
+                case 1:
+                    if(getTime() > 1.4){
+                        setPower(0);
+                        state++;
+                    }
+                    break;
+                case 2://first turn
+                    setPower(-0.35f, 0.35f);
+                    if(Math.abs(gyro.getIntegratedZValue()) > 44){
+                        setPower(0);
+                        state++;
+                    }
+                    break;
+                case 3:
+                    gyro.resetZAxisIntegrator();
                     state++;
                     break;
-                case 2: //turn left on line
-                    turnDegrees(0.15f, 45);
-                    state++;
-                    break;
-                case 3: //drive forward along line
-                    driveToDistance(0.25f, 25);
-                    state++;
-                    break;
-                case 4:
-                    //push beacon button
-                    state++;
+                case 4://drive until white line
+                    driveGyro(0.3f);
+                    if(getTime() > 10){
+                        setPower(0);
+                        state = 100;
+                        break;
+                    }
+                    if(isLeftOnLine()){
+                        state ++;
+                        setTime();
+                    }
                     break;
                 case 5:
-                    //dump climbers
+                    if(getTime() > 0.2) {
+                        gyro.resetZAxisIntegrator();
+                        setPower(-0.35f, 0.35f);
+                        state++;
+                    }
+                    break;
+                case 6: //getting into proper position on white line
+                    if(Math.abs(gyro.getIntegratedZValue()) > 55){
+                        setPower(0.35f, -0.35f);
+                    } else if(Math.abs(gyro.getIntegratedZValue()) > 44){
+                        setPower(0f);
+                        gyro.resetZAxisIntegrator();
+                        state++;
+                    }
+                    break;
+                case 7: //drive forward for good position for dumping climbers
+                    if(sonar.getUltrasonicLevel() < 21) {
+                        far = good = 0;
+                        close++;
+                    } else if (sonar.getUltrasonicLevel() > 24) {
+                        close = good = 0;
+                        far++;
+                    } else {
+                        close = far = 0;
+                        good++;
+                    }
+
+                    if (close == 2) {
+                        setPower(-0.1f);
+                        close = 0;
+                    } else if (far == 2) {
+                        setPower(0.1f);
+                        far = 0;
+                    } else if (good == 2) {
+                        setPower(0);
+                        thrower.setPosition(1);
+                        state++;
+                        close = far = good = 0;
+                    }
+                    break;
+                case 8: //beacon pusher
+                    try {
+                        Thread.sleep(2500);
+                    }catch (InterruptedException e){
+                        telemetry.addData("ERROR", e.getStackTrace()[0]);
+                    }
+                    if(beacon.red() < 5 && beacon.blue() < 5){
+                        thrower.setPosition(0);
+                        beaconServo.setPosition(0.1);
+                        telemetry.addData("Beacon", "FAILED");
+                        state = 100;
+                        break;
+                    }
+                    if(beacon.red() > beacon.blue()){
+                        telemetry.addData("RED color: ", beacon.red());
+                        telemetry.addData("BLUE color: ", beacon.blue());
+                        thrower.setPosition(0);
+                        try {
+                            Thread.sleep(2000);
+                        }catch (InterruptedException e){
+                            telemetry.addData("ERROR", e.getStackTrace()[0]);
+                        }
+                        beaconServo.setPosition(0);
+                    } else {
+                        telemetry.addData("BLUE color: ", beacon.blue());
+                        telemetry.addData("RED color: ", beacon.red());
+                        thrower.setPosition(0);
+                        try {
+                            Thread.sleep(2000);
+                        }catch (InterruptedException e){
+                            telemetry.addData("ERROR", e.getStackTrace()[0]);
+                        }
+                        beaconServo.setPosition(1);
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    }catch (InterruptedException e){
+                        telemetry.addData("ERROR", e.getStackTrace()[0]);
+                    }
+                    state++;
+                    setPower(0.35f);
+                    break;
+
+                case 9: //drive forward until push beacon
+                    try {
+                        Thread.sleep(1250);
+                    }catch (InterruptedException e){
+                        telemetry.addData("ERROR", e.getStackTrace()[0]);
+                    }
+                    setPower(0);
                     state++;
                     break;
-                case 6: //maybe turn -90 degrees and park on right side
-                    turnDegrees(0.15f, 90);
-                    driveStraightGyro(0.15f);
-                    Thread.sleep(500);
-                    setPower(0, 0);
-                    state++;
+                /*
+                case 10:
+                     gyro.resetZAxisIntegrator();
+                     setPower(0.35f, -0.35f);
+                      if(Math.abs(gyro.getIntegratedZValue()) < 89){
+                        setPower(0);
+                        try {
+                            Thread.sleep(1000);
+                        }catch (InterruptedException e){
+                            telemetry.addData("ERROR", e.getStackTrace()[0]);
+                        }
+                        setPower(0.35f);
+                        Thread.sleep(2500);
+                        setPower(0);
+                    }
+                 */
+                default:
+                    setPower(0);
                     break;
             }
+            waitOneFullHardwareCycle();
         }
     }
-
-    void initHardware() {
-        try {
-            arm = hardwareMap.dcMotor.get("arm");
-            arm.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "arm motor and controller setup");
-        }
-
-        try {
-            wfr = hardwareMap.dcMotor.get("wfr");
-            wbr = hardwareMap.dcMotor.get("wbr");
-            wfl = hardwareMap.dcMotor.get("wfl");
-            wbl = hardwareMap.dcMotor.get("wbl");
-
-            wbr.setDirection(DcMotor.Direction.REVERSE);
-            wfr.setDirection(DcMotor.Direction.REVERSE);
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "driving wheels setup");
-        }
-
-        try {
-            thrower = hardwareMap.servo.get("thrower");
-            leftWing = hardwareMap.servo.get("left_wing");
-            rightWing = hardwareMap.servo.get("right_wing");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "servo setup");
-        }
-
-        try {
-            gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "gyro sensor setup");
-        }
-
-        try {
-            gyro.calibrate();
-            while (gyro.isCalibrating()) {
-                sleep(50);
-            }
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "calibrating issue");
-        }
-
-        try {
-            groundLeft = hardwareMap.colorSensor.get("groundLeft");
-            groundRight = hardwareMap.colorSensor.get("groundRight");
-            beacon = hardwareMap.colorSensor.get("beacon");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "color sensor setup");
-        }
-
-        try {
-            gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");
-            gyro.calibrate();
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "gyro sensor setup");
-        }
-
-        try {
-            sonar = hardwareMap.ultrasonicSensor.get("sonar");
-        } catch (Exception e) {
-            telemetry.addData("[ERROR]", "sonar sensor setup");
-        }
-    }
-
-    void setPower (float power) {
-        wfr.setPower(power);
-        wbr.setPower(power);
-        wfl.setPower(power);
-        wbl.setPower(power);
-    }
-
-    void setPower(float left, float right) {
-        wfr.setPower(right);
-        wbr.setPower(right);
-        wfl.setPower(left);
-        wbl.setPower(left);
-    }
-
-    float scaleInput(float input) {
-        input = Range.clip(input, -1, 1);
-        if (input > 0)
-            return (float)Math.pow(input, 4);
-        return -(float)Math.pow(input, 4);
-    }
-
-    void turnDegrees(float power, int degrees) {
-        gyro.resetZAxisIntegrator();
-        if (degrees > 0) {
-            setPower(power, -power);
-        } else {
-            setPower(-power, power);
-        }
-        while (Math.abs(gyro.getIntegratedZValue()) < Math.abs(degrees)) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                telemetry.addData("[ERROR]", "distance wait");
-            }
-        }
-        setPower(0f);
-    }
-
-    // will be in a loop (correction might be jerky, will test)
-    void driveStraightGyro(float power) {
-        setPower(power);
-        double angle = gyro.getIntegratedZValue();
-        if (angle > degreeError) {
-            setPower(0.2f, -0.2f);
-        }
-        else if (angle < -degreeError) {
-            setPower(-0.2f, 0.2f);
-        }
-        else {
-            setPower(power, power);
-        }
-    }
-
-    // will be in a loop (correction might be jerky, will test)
-    void driveStraightLine(float power) {
-        setPower(power);
-        if (isOnLine(true))
-            setPower(power, -power);
-        else if (isOnLine(false))
-            setPower(-power, power);
-    }
-
-    boolean isOnLine(boolean right) {
-        if (right) {
-            telemetry.addData("Right Color", "R: " + groundRight.red() + " G: " + groundRight.green() + " B: " + groundRight.blue());
-            return groundRight.red() > whiteLevel && groundRight.blue() > whiteLevel && groundRight.green() > whiteLevel;
-        } else {
-            telemetry.addData("Left Color", "R: " + groundLeft.red() + " G: " + groundLeft.green() + " B: " + groundLeft.blue());
-            return groundLeft.red() > whiteLevel && groundLeft.blue() > whiteLevel && groundLeft.green() > whiteLevel;
-        }
-    }
-
-    boolean isAtWall() {
-        return sonar.getUltrasonicLevel() < wallDistances;
-    }
-
-    void dumpClimbers() {
-        thrower.setPosition(1);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            // nothing
-        }
-        thrower.setPosition(0);
-    }
-
-    void resetEncoders() {
-        wfr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wbr.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wfl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-        wbl.setMode(DcMotorController.RunMode.RESET_ENCODERS);
-    }
-
-    void enableEncoders(boolean encoder) {
-        if (encoder) {
-            wfr.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wbr.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wfl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-            wbl.setMode(DcMotorController.RunMode.RUN_USING_ENCODERS);
-        } else {
-            wfr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wbr.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wfl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-            wbl.setMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
-        }
-    }
-
-    // subject to change
-    boolean isBeaconRed() {
-        return beacon.red() > 100 && beacon.blue() < 90;
-    }
-
-    void driveToDistance(float power, int distance){
-
-        if (sonar_times < 2) {
-            driveStraightLine(power); //no longer driveStraightGyro
-            double level = sonar.getUltrasonicLevel();
-            telemetry.addData("Sonar", level);
-            if (level < distance) {
-                sonar_times++;
-            } else {
-                sonar_times = 0;
-            }
-        }
-        if (sonar_times == 2) {
-            setPower(0, 0);
-            sonar_times++;
-        }
-    }
-    */
 }

@@ -18,7 +18,7 @@ public class BotHardware extends LinearOpMode {
     final int whiteLevel = 100;
     final int wallDistances = 5;
 
-    DcMotor wfl, wbl, wfr, wbr;
+    DcMotor wfl, wbl, wfr, wbr, arm;
     Servo thrower, leftWing, rightWing, beaconServo;
     ColorSensor groundLeft, groundRight, beacon;
     ModernRoboticsI2cGyro gyro;
@@ -36,6 +36,8 @@ private     double startTime = getRuntime();
             wbr = hardwareMap.dcMotor.get("wbr");
             wfl = hardwareMap.dcMotor.get("wfl");
             wbl = hardwareMap.dcMotor.get("wbl");
+
+            arm = hardwareMap.dcMotor.get("arm");
 
             wbr.setDirection(DcMotor.Direction.REVERSE);
             wfr.setDirection(DcMotor.Direction.REVERSE);
@@ -70,6 +72,7 @@ private     double startTime = getRuntime();
         } catch (Exception e){
             telemetry.addData("ERROR", e.getStackTrace()[1]);
         }
+        beacon.enableLed(false);
 
         try {
             gyro = (ModernRoboticsI2cGyro)hardwareMap.gyroSensor.get("gyro");

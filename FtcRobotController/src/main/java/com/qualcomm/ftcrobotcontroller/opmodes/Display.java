@@ -25,14 +25,14 @@ public class Display extends BotHardware {
             if(getTime() > 10){
                 setTime();
             }
-            if((int)(getTime() % 2) == 0){
-                leftWing.setPosition(1);
-                rightWing.setPosition(1);
+            if(getTime() < 5){
+                leftWing.setPosition(0.8);
+                rightWing.setPosition(0.2);
                 thrower.setPosition(1);
                 setPower(-0.5f, 0.5f);
             } else {
-                leftWing.setPosition(0);
-                rightWing.setPosition(0);
+                leftWing.setPosition(0.8);
+                rightWing.setPosition(0.2);
                 thrower.setPosition(0);
                 setPower(0.5f, -0.5f);
             }
