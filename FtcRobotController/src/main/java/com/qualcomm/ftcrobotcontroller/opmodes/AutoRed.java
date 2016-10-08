@@ -155,7 +155,6 @@ public class AutoRed extends BotHardware
                     }
                     if(beacon.red() < 5 && beacon.blue() < 5)
                     {
-                        thrower.setPosition(0);
                         beaconServo.setPosition(0.1);
                         telemetry.addData("Beacon", "FAILED");
                         state = 100;
@@ -165,7 +164,6 @@ public class AutoRed extends BotHardware
                     {
                         telemetry.addData("RED color: ", beacon.red());
                         telemetry.addData("BLUE color: ", beacon.blue());
-                        thrower.setPosition(0);
                         try {
                             Thread.sleep(2000);
                         }catch (InterruptedException e){
@@ -177,7 +175,6 @@ public class AutoRed extends BotHardware
                     {
                         telemetry.addData("BLUE color: ", beacon.blue());
                         telemetry.addData("RED color: ", beacon.red());
-                        thrower.setPosition(0);
                         try {
                             Thread.sleep(2000);
                         }
