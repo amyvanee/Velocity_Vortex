@@ -52,9 +52,7 @@ private     double startTime = getRuntime();
         }
 
         try {
-            thrower = hardwareMap.servo.get("thrower");
-            leftWing = hardwareMap.servo.get("left_wing");
-            rightWing = hardwareMap.servo.get("right_wing");
+            //thrower = hardwareMap.servo.get("thrower");
             beaconServo = hardwareMap.servo.get("beaconServo");
         } catch (Exception e) {
             telemetry.addData("[ERROR]:", "servo setup");
@@ -193,11 +191,13 @@ private     double startTime = getRuntime();
         return false;
     }
 
-
+//not sure if we will need to determine throwing distance
+    /*
     double throwDist = 20;
     boolean correctThrowDist(){
         return driveToDist(throwDist);
     }
+    */
 
     double beaconDist = 5;
     boolean correctBeaconDist(){
@@ -218,13 +218,14 @@ private     double startTime = getRuntime();
     boolean leftSideRed(){
         return beacon.red() > beacon.blue();
     }
-
-    void dumpClimbers() {
+// unsure if this will be a necessary function: to be updated
+/*    void dumpClimbers() {
         thrower.setPosition(1);
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
         }
         thrower.setPosition(0);
+        */
     }
 }
