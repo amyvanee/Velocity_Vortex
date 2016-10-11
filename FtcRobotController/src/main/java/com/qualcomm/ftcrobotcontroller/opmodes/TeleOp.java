@@ -15,7 +15,7 @@ public class TeleOp extends BotHardware {
 
         // power values
         float wheelPower, turnPower;
-        float armPower;
+        //float armPower;  //arm variable
 
         waitForStart();
 
@@ -48,6 +48,8 @@ public class TeleOp extends BotHardware {
             // gamepad2;
             // --------------
 
+            
+            /*  //Arm controls
             armPower = gamepad2.right_stick_y;
             // must hold down 'a' before being able to move arm (a for activate)
             if (gamepad2.a) {
@@ -67,10 +69,18 @@ public class TeleOp extends BotHardware {
                 thrower.setPosition(1);
             else
                 thrower.setPosition(0);
+                
+                
 
             // controlling the wings
             leftWing.setPosition(Range.scale(gamepad2.left_trigger, 0, 1, 1, 0.2));
             rightWing.setPosition(Range.scale(gamepad2.right_trigger, 0, 1, 0.2, 1));
+            */
+            
+            if(gamepad1.a)
+                beaconServo.setPosition(1);
+            else
+                beaconServo.setPosition(0);
 
             waitOneFullHardwareCycle();
         }
