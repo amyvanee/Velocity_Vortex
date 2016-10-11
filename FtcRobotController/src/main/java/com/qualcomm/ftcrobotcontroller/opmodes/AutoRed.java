@@ -55,15 +55,14 @@ public class AutoRed extends BotHardware
                     setPower(0.25f);
                     state++;
                     break;
-
-                case 1:
+                case 1: //after 1 sec stop to turn
                     if(getTime() > 1)
                     {
                         setPower(0);
                         state++;
                     }
                     break;
-                case 2://first turn
+                case 2: //first turn 45 degrees //CHANGE
                     setPower(0.35f, -0.35f);
                     if(Math.abs(gyro.getIntegratedZValue()) > 44)
                     {
@@ -71,11 +70,11 @@ public class AutoRed extends BotHardware
                         state++;
                     }
                     break;
-                case 3:
+                case 3: //reset gyro
                     gyro.resetZAxisIntegrator();
                     state++;
                     break;
-                case 4://drive until white line
+                case 4: //drive until white line
                     driveGyro(0.3f);
                     if(getTime() > 10)
                     {
@@ -89,7 +88,7 @@ public class AutoRed extends BotHardware
                         setTime();
                     }
                     break;
-                case 5:
+                case 5: //turn
                     if(getTime() > 0.2) 
                     {
                         gyro.resetZAxisIntegrator();
@@ -109,7 +108,7 @@ public class AutoRed extends BotHardware
                         state++;
                     }
                     break;
-                case 7: //drive forward for good position for dumping climbers
+                case 7: //drive forward until good distance for measuring color of beacon
                     if(sonar.getUltrasonicLevel() < 21) 
                     {
                         far = good = 0;
@@ -175,7 +174,8 @@ public class AutoRed extends BotHardware
                     {
                         telemetry.addData("BLUE color: ", beacon.blue());
                         telemetry.addData("RED color: ", beacon.red());
-                        try {
+                        try 
+                        {
                             Thread.sleep(2000);
                         }
                         catch (InterruptedException e)
@@ -195,7 +195,6 @@ public class AutoRed extends BotHardware
                     state++;
                     setPower(0.35f);
                     break;
-
                 case 9: //drive forward until push beacon
                     try 
                     {
@@ -208,23 +207,34 @@ public class AutoRed extends BotHardware
                     setPower(0);
                     state++;
                     break;
-                /*
-                case 10:
+                case 10: //rotate 90 degrees
                      gyro.resetZAxisIntegrator();
                      setPower(0.35f, -0.35f);
-                      if(Math.abs(gyro.getIntegratedZValue()) < 89){
+                     if(Math.abs(gyro.getIntegratedZValue()) < 89)
+                     {
                         setPower(0);
-                        try {
-                            Thread.sleep(1000);
-                        }catch (InterruptedException e){
-                            telemetry.addData("ERROR", e.getStackTrace()[0]);
-                        }
-                        setPower(0.35f);
-                        Thread.sleep(2500);
+                        state++;
+                     }
+                     break;
+               case 11: //drive forward until white line
+                    gyro.resetZAxisIntegrator();
+                    driveGyro(0.3f);
+                    if(getTime() > 10)
+                    {
                         setPower(0);
+                        state = 100;
+                        break;
                     }
-                 */
-                default:
+                    if(isLeftOnLine())
+                    {
+                        state++;
+                        setTime();
+                    }
+                    break;
+               case 12: //rotate 90 degrees to face beacon again
+               case 13: //push beacon
+               case 14: //drive backwards to center
+               default:
                     setPower(0);
                     break;
             }
