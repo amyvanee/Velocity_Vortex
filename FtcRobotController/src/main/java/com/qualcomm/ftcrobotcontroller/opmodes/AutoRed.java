@@ -231,8 +231,27 @@ public class AutoRed extends BotHardware
                         setTime();
                     }
                     break;
-               case 12: //rotate 90 degrees to face beacon again
-               case 13: //push beacon
+               case 12: //rotate 90 degrees to face beacon again -- check direction of turn
+                     gyro.resetZAxisIntegrator();
+                     setPower(0.35f, -0.35f);
+                     if(Math.abs(gyro.getIntegratedZValue()) < 89)
+                     {
+                        setPower(0);
+                        state++;
+                     }
+                     break;
+               case 13: //push beacon -- check code
+                    try 
+                    {
+                        Thread.sleep(1250);
+                    }
+                    catch (InterruptedException e)
+                    {
+                        telemetry.addData("ERROR", e.getStackTrace()[0]);
+                    }
+                    setPower(0);
+                    state++;
+                    break;
                case 14: //drive backwards to center
                default:
                     setPower(0);
